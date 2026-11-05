@@ -1,0 +1,25 @@
+
+digraph G {
+    rankdir=TB;
+    splines=true;
+
+    node [shape=record, height=.1];
+
+    // Узлы списка
+    tail  [label="{ <prev> • | TAIL | <next> • }"];
+    node1 [label="{ <prev> • | data: A | <next> • }"];
+    node2 [label="{ <prev> • | data: B | <next> • }"];
+    node3 [label="{ <prev> • | data: C | <next> • }"];
+    head  [label="{ <prev> • | HEAD | <next> • }"];
+
+    // Невидимая связь фиксирует базовый порядок слева направо: TAIL -> ... -> HEAD
+    tail -> node1 -> node2 -> node3 -> head [style=invis];
+
+    // 1. Обоюдная стрелка между TAIL и data A
+    tail:next -> node1:prev [dir=both];
+    node1:next -> node2:prev [dir=both];
+    node2:next -> node3:prev [dir=both];
+    node3:next -> head:prev [dir=both];
+    head:next -> tail:prev [dir=both];
+
+}

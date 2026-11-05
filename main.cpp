@@ -8,13 +8,19 @@ int main() {
 
     list_dump(&list);
 
-    list_add_elem_after_current_index_and_return_array_pos(&list, 0, 100);
+    list_push_elem_after_current_index_and_return_array_pos(&list, 0, 100);
     list_dump(&list);
 
-    list_add_elem_after_current_index_and_return_array_pos(&list, 1, 200);
+    list_push_elem_after_current_index_and_return_array_pos(&list, 1, 200);
     list_dump(&list);
 
-    list_add_elem_after_current_index_and_return_array_pos(&list, 2, 300);
+    list_push_elem_after_current_index_and_return_array_pos(&list, 2, 300);
+    list_dump(&list);
+
+    list_push_elem_after_current_index_and_return_array_pos(&list, 0, 400);
+    list_dump(&list);
+
+    list_pop_elem_after_pointed_with_current_index(&list, 1);
     list_dump(&list);
 
     list_dtor(&list);

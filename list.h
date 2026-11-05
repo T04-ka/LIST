@@ -17,7 +17,7 @@ struct list_t
 {
     list_elem_t* data_buf;
     int* next;
-    // size_t* prev;
+    int* prev;
 
     size_t capacity;
     size_t size;
@@ -28,11 +28,15 @@ struct list_t
 
 
 
-size_t list_add_elem_after_current_index_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
-void list_pop_elem_after_pointed_with_current_index(list_t* list_ptr, int current_index);
+size_t list_push_elem_after_current_index_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
+void list_pop_elem_after_pointed_with_current_index(list_t* list_ptr, size_t current_index);
 int change_value_of_list_elem_after_pointed_with_current_index(list_t* list_ptr, size_t index, list_elem_t new_value);
 int list_ctor(list_t* list_ptr, size_t nmemb);
 int list_dtor(list_t* list_ptr);
+size_t get_tail(list_t* list_ptr);
+size_t get_head(list_t* list_ptr);
+void set_current_indexed_elem(list_t* list_ptr, size_t cur_index, list_elem_t value);
+list_elem_t get_current_indexed_elem(list_t* list_ptr, size_t index);
 void list_dump(list_t* list_ptr);
 
 #endif

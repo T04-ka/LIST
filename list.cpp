@@ -8,19 +8,18 @@
 // next == -1; prev != -1
 //
 
-void set_cur_elem(list_t* list_ptr, size_t cur_index, list_elem_t value);
-void set_cur_index_in_next(list_t* list_ptr, size_t cur_index, int new_value);
+void set_current_indexed_elem_in_next(list_t* list_ptr, size_t cur_index, int new_value);
+void set_current_indexed_elem_in_prev(list_t* list_ptr, size_t cur_index, int new_value);
 void set_head(list_t* list_ptr, size_t value);
 void set_tail(list_t* list_ptr, size_t value);
-size_t get_tail(list_t* list_ptr);
-size_t get_head(list_t* list_ptr);
-int get_next(list_t* list_ptr, size_t index);
-list_elem_t get_elem(list_t* list_ptr, size_t index);
+int get_current_indexed_elem_from_next(list_t* list_ptr, size_t index);
+int get_current_indexed_elem_from_prev(list_t* list_ptr, size_t index);
 
 size_t free_elem_find(list_t* list_ptr);
 size_t free_elem_find(list_t* list_ptr) {
 
     // verif
+
     size_t i = 0;
     for (i = 0; i < list_ptr->capacity; i++) {
 
@@ -37,7 +36,35 @@ size_t free_elem_find(list_t* list_ptr) {
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_add_elem_after_current_index_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
+size_t list_push_elem_in_current_index_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
+
+    // verif
+
+    if (current_index == 0) {
+
+        // ERROR
+        return -1u;
+    }
+
+    size_t free_index = free_elem_find(list_ptr);
+
+    size_t next_elem = get_current_indexed_elem_from_next(list_ptr, current_index);
+    size_t prev_elem = get_current_indexed_elem_from_prev(list_ptr, current_index);
+
+    if (current_index == get_head(list_ptr)) {
+
+        /
+    }
+
+    if (current_index == get_tail(list_ptr)) {
+
+
+    }
+
+
+}
+
+size_t list_push_elem_after_current_index_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
 
     // verif
 
@@ -46,20 +73,20 @@ size_t list_add_elem_after_current_index_and_return_array_pos(list_t* list_ptr, 
 
     if (current_index == 0) {
 
-        // list_ptr->next[next_index] = (int) list_ptr->tail;
-        set_cur_index_in_next(list_ptr, next_index, (int) get_tail(list_ptr));
+        set_current_indexed_elem_in_next(list_ptr, next_index, (int) get_tail(list_ptr));
         set_tail(list_ptr, next_index);
-        set_cur_index_in_next(list_ptr, 0, (int) next_index);
+        set_current_indexed_elem_in_next(list_ptr, 0, (int) next_index);
+
+
     }
     else {
-        set_cur_index_in_next(list_ptr, next_index, get_next(list_ptr, current_index));
-        set_cur_index_in_next(list_ptr, current_index, (int) next_index);
+        set_current_indexed_elem_in_next(list_ptr, next_index, get_current_indexed_elem_from_next(list_ptr, current_index));
+        set_current_indexed_elem_in_next(list_ptr, current_index, (int) next_index);
     }
 
     change_value_of_list_elem_after_pointed_with_current_index(list_ptr, (size_t) current_index, elem);
-    // list_ptr->data_buf[next_index] = elem;
 
-    if (get_next(list_ptr, next_index) == 0) {
+    if (get_current_indexed_elem_from_next(list_ptr, next_index) == 0) {
 
         set_head(list_ptr, next_index);
     }
@@ -71,7 +98,7 @@ size_t list_add_elem_after_current_index_and_return_array_pos(list_t* list_ptr, 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 
-void set_cur_index_in_next(list_t* list_ptr, size_t cur_index, int new_value) {
+void set_current_indexed_elem_in_next(list_t* list_ptr, size_t cur_index, int new_value) {
 
     // verif
 
@@ -79,8 +106,18 @@ void set_cur_index_in_next(list_t* list_ptr, size_t cur_index, int new_value) {
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
-// TODO: убрть строки присваивания и сделать через функции
-void list_pop_elem_after_pointed_with_current_index(list_t* list_ptr, int current_index) {
+
+
+void set_current_indexed_elem_in_prev(list_t* list_ptr, size_t cur_index, int new_value) {
+
+    // verif
+
+    list_ptr->prev[cur_index] = new_value;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+void list_pop_elem_after_pointed_with_current_index(list_t* list_ptr, size_t current_index) {
     //
     // cur_next = next[current_index]
     // теперь next[current_index] = next[cur_next]
@@ -95,19 +132,21 @@ void list_pop_elem_after_pointed_with_current_index(list_t* list_ptr, int curren
 
     // verif
 
+    size_t next_index = 0;
     if (current_index == 0) {
 
-        int next_index = list_ptr->next[list_ptr->tail];
-        list_ptr->tail = (size_t) list_ptr->next[next_index];
-        list_ptr->next[next_index] = -1;
+        next_index = get_tail(list_ptr);
+        set_tail(list_ptr, (size_t) get_current_indexed_elem_from_next(list_ptr, next_index));
     }
     else {
 
-        int current_next_index = list_ptr->next[current_index];
-        list_ptr->next[current_index] = list_ptr->next[current_next_index];
-        list_ptr->next[current_next_index] = -1;
+        next_index = (size_t) get_current_indexed_elem_from_next(list_ptr, current_index);
     }
 
+    set_current_indexed_elem_in_next(list_ptr, current_index, \
+                                    get_current_indexed_elem_from_next(list_ptr, next_index));
+    set_current_indexed_elem(list_ptr, next_index, 0);
+    set_current_indexed_elem_in_next(list_ptr, next_index, -1);
     list_ptr->size--;
 }
 
@@ -137,10 +176,11 @@ int change_value_of_list_elem_after_pointed_with_current_index(list_t* list_ptr,
     }
     else {
 
-        next_index = get_next(list_ptr, cur_index);
+        next_index = get_current_indexed_elem_from_next(list_ptr, cur_index);
     }
 
     list_ptr->data_buf[next_index] = new_value;
+
 
     return 0;
 }
@@ -154,9 +194,12 @@ int list_ctor(list_t* list_ptr, size_t nmemb) {
     list_ptr->capacity = nmemb;
     list_ptr->data_buf = (list_elem_t*) calloc(nmemb, sizeof(list_elem_t));
     list_ptr->next     = (int*) calloc(nmemb, sizeof(int));
+    list_ptr->prev     = (int*) calloc(nmemb, sizeof(int));
     poizon_int_arr(list_ptr->next, nmemb);
+    poizon_int_arr(list_ptr->prev, nmemb);
     change_value_of_list_elem_after_pointed_with_current_index(list_ptr, 0, 69);
-    set_cur_index_in_next(list_ptr, 0, 0);
+    set_current_indexed_elem_in_next(list_ptr, 0, 0);
+    set_current_indexed_elem_in_prev(list_ptr, 0, 0);
     set_head(list_ptr, 0);
     set_tail(list_ptr, 0);
     list_ptr->size = 0;
@@ -172,6 +215,7 @@ int list_dtor(list_t* list_ptr) {
 
     free(list_ptr->data_buf);
     free(list_ptr->next);
+    free(list_ptr->prev);
     set_head(list_ptr, 0);
     set_tail(list_ptr, 0);
     list_ptr->size = 0;
@@ -213,21 +257,28 @@ size_t get_head(list_t* list_ptr) {
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-int get_next(list_t* list_ptr, size_t index) {
+int get_current_indexed_elem_from_next(list_t* list_ptr, size_t index) {
 
     return list_ptr->next[index];
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-list_elem_t get_elem(list_t* list_ptr, size_t index) {
+int get_current_indexed_elem_from_prev(list_t* list_ptr, size_t index) {
+
+    return list_ptr->prev[index];
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+list_elem_t get_current_indexed_elem(list_t* list_ptr, size_t index) {
 
     return list_ptr->data_buf[index];
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void set_cur_elem(list_t* list_ptr, size_t cur_index, list_elem_t value) {
+void set_current_indexed_elem(list_t* list_ptr, size_t cur_index, list_elem_t value) {
 
     // verif
 
@@ -277,13 +328,12 @@ void list_dump(list_t* list_ptr) {
     }
     LOG_NLINE;
 
-    // LOG("prev%.5s", "");
-    // for (int i = 0; i < list_ptr->size; i++) {
-    //     // TODO: сделать универсальный под любой тип
-    //     LOG("%.5lg", list_ptr->prev[i]);
-    //     //      ^
-    // }
-    // LOG_NLINE;
+    LOG("prev");
+    for (size_t i = 0; i < list_ptr->capacity; i++) {
+
+        LOG("%5d", list_ptr->prev[i]);
+    }
+    LOG_NLINE;
 
 
     LOG_NLINE;

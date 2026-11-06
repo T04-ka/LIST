@@ -1,17 +1,41 @@
 #ifndef LIST_H
 #define LIST_H
 
+#define LIST_SANITIZE
+
 #ifdef LIST_SANITIZE
-#define ONDEBUG(...) ##__VA_ARGS__
+#define ONDEBUG(...) __VA_ARGS__
 #else
-#define ONDEBUG(...) void(0)
+#define ONDEBUG(...)
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 #ifndef list_elem_t
 typedef double list_elem_t;
 #endif
+
+enum list_err_n
+{
+    LIST_ERR_OK                     = 0,
+    LIST_ERR_NULLPTR                = 1,
+    LIST_ERR_DATABUF_NULLPTR        = 2,
+    LIST_ERR_NEXT_NULLPTR           = 3,
+    LIST_ERR_PREV_NULLPTR           = 4,
+    LIST_ERR_SIZE_GREATER_CAPACITY  = 5,
+    LIST_ERR_WRONG_HEAD             = 6,
+    LIST_ERR_WRONG_TAIL             = 7,
+    LIST_ERR_NEXT_HOLE              = 8,
+    LIST_ERR_PREV_HOLE              = 9,
+};
+
+struct list_err_t
+{
+    list_err_n errn;
+    int hole_pointer;
+};
 
 struct list_t
 {
@@ -23,6 +47,8 @@ struct list_t
     size_t size;
     size_t head;
     size_t tail;
+
+    ONDEBUG(list_err_t list_ok;)
 };
 
 
@@ -96,5 +122,8 @@ size_t list_push_before(list_t* list_ptr, size_t current_index, list_elem_t valu
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
+void make_list_dump(list_t* list_ptr, const char* dot_filename, const char* png_filename);
+
+//-----------------------------------------------------------------------------------------------------------------------------
 
 #endif

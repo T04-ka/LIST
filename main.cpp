@@ -20,7 +20,7 @@ int main() {
     list_push_front(&list, 400);
     list_dump(&list);
 
-
+    make_list_dump(&list, "list.dot", "list.png");
 
     list_dtor(&list);
 }

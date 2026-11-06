@@ -5,17 +5,6 @@
 #include <stdlib.h>
 
 
-enum list_err_t
-{
-    LIST_ERR_OK = 0,
-    LIST_ERR_NULLPTR = 1,
-    LIST_ERR_DATABUF_NULLPTR = 2,
-    LIST_ERR_NEXT_NULLPTR = 3,
-    LIST_ERR_PREV_NULLPTR = 4,
-    LIST_ERR_SIZE_GREATER_CAPACITY = 5,
-};
-
-
 //-----------------------------------------------------------------------------------------------------------------------------
 size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -43,15 +32,26 @@ void set_current_indexed_elem(list_t* list_ptr, size_t cur_index, list_elem_t va
 //-----------------------------------------------------------------------------------------------------------------------------
 list_elem_t get_current_indexed_elem(list_t* list_ptr, size_t current_index);
 //-----------------------------------------------------------------------------------------------------------------------------
-list_err_t verifier(list_t* list_ptr);
+list_err_n list_verifier(list_t* list_ptr);
 //-----------------------------------------------------------------------------------------------------------------------------
 
+#ifdef LIST_SANITIZE
+#define LIST_OK list_verifier(list_ptr);        \
+                if (list_ptr->list_ok.errn) {   \
+                                                \
+                    err_print(list_ptr);        \
+                }
+
+
+#else
+#define LIST_OK void(0)
+#endif
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
 
-    // verif
+
 
     if (current_index == 0) {
 
@@ -390,12 +390,13 @@ void set_current_indexed_elem(list_t* list_ptr, size_t cur_index, list_elem_t va
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
+// TODO: доделать
+list_err_n list_verifier(list_t* list_ptr) {
 
-list_err_t verifier(list_t* list_ptr) {
-
-    #ifndef LIST_SANITIZE
+    #ifdef LIST_SANITIZE
     if (list_ptr == NULL) {
 
+        list_ptr->list_ok.errn = LIST_ERR_NULLPTR;
         return LIST_ERR_NULLPTR;
     }
 
@@ -471,8 +472,7 @@ list_err_t verifier(list_t* list_ptr) {
         return LIST_ERR_PREV_HOLE;
     }
 
-
-
+    return LIST_ERR_OK;
 
     #else
     void(0);
@@ -539,3 +539,106 @@ void list_dump(list_t* list_ptr) {
 #undef LOG_NLINE
 
 //-----------------------------------------------------------------------------------------------------------------------------
+
+void make_list_dump(list_t* list_ptr, const char* dot_filename, const char* png_filename) {
+
+    FILE* dot_file = fopen(dot_filename, "w");
+    if (!dot_file) {
+        return;
+    }
+
+    fprintf(dot_file, "digraph G {\n");
+    fprintf(dot_file, "    newrank=true;\n");
+    // compound=true легализует пересечение стрелками границ блоков без ошибок триангуляции
+    fprintf(dot_file, "    compound=true;\n");
+    fprintf(dot_file, "    rankdir=TB;\n");
+    fprintf(dot_file, "    splines=true;\n");
+    fprintf(dot_file, "    nodesep=0.5;\n");
+    fprintf(dot_file, "    ranksep=0.4;\n\n");
+    fprintf(dot_file, "    node [shape=record, height=.1];\n\n");
+
+    size_t items_per_col = 4;
+    size_t num_cols = (list_ptr->capacity + items_per_col - 1) / items_per_col;
+    if (num_cols == 0) num_cols = 1;
+
+    fprintf(dot_file, "    { \n");
+    fprintf(dot_file, "        rank=same; \n");
+    fprintf(dot_file, "        node [shape=point, style=invis, width=0];\n        ");
+
+    for (size_t c = 0; c < num_cols; c++) {
+        fprintf(dot_file, "anchor%zu", c);
+        if (c < num_cols - 1) fprintf(dot_file, " -> ");
+    }
+
+    fprintf(dot_file, " [style=invis]; \n");
+    fprintf(dot_file, "    }\n\n");
+
+    for (size_t c = 0; c < num_cols; c++) {
+
+        fprintf(dot_file, "    subgraph cluster_col%zu {\n", c);
+        fprintf(dot_file, "        label = \"Блок %zu\"; color=lightgray; style=dashed;\n", c + 1);
+
+        size_t start_index = c * items_per_col;
+
+        fprintf(dot_file, "        { rank=same; anchor%zu; node%zu; }\n\n", c, start_index);
+
+
+        for (size_t i = start_index; i < (c + 1) * items_per_col && i < list_ptr->capacity; i++) {
+
+            const char* prefix = "";
+            if (i == list_ptr->head) prefix = "HEAD\\n";
+            if (i == list_ptr->tail) prefix = "TAIL\\n";
+
+            // Генерируем label (текст ячейки) — строго без атрибутов стиля внутри!
+            fprintf(dot_file, "        node%zu [label=\"{ %sIndex: %zu | { <p> prev: %d | data: %lg | <n> next: %d } }\"",
+                    i, prefix, i, list_ptr->prev[i], list_ptr->data_buf[i], list_ptr->next[i]);
+
+            // Атрибуты стиля пишем СНАРУЖИ кавычек label
+            if (i == 0) {
+                fprintf(dot_file, ", style=filled, fillcolor=lightblue, gradientangle=90");
+            }
+
+            // Закрываем описание узла квадратной скобкой
+            fprintf(dot_file, "];\n");
+        }
+
+        fprintf(dot_file, "    }\n\n");
+    }
+
+    // Блок генерации связей (стрелок)
+    for (size_t i = 0; i < list_ptr->capacity; i++) {
+
+        int n_idx = list_ptr->next[i];
+        if (n_idx >= 0 && (size_t)n_idx < list_ptr->capacity) {
+
+            // Внесли weight=0.1 для длинных стрелок, чтобы снизить натяжение между столбцами
+            if (abs((int)i - n_idx) > (int)items_per_col) {
+                fprintf(dot_file, "    node%zu:n -> node%d:p [color=blue, weight=0.1];\n", i, n_idx);
+            } else {
+                fprintf(dot_file, "    node%zu:n -> node%d:p [color=blue];\n", i, n_idx);
+            }
+        }
+
+        int p_idx = list_ptr->prev[i];
+        if (p_idx >= 0 && (size_t)p_idx < list_ptr->capacity) {
+
+            if (abs((int)i - p_idx) > (int)items_per_col) {
+                fprintf(dot_file, "    node%zu:p -> node%d:n [color=red, style=dashed, weight=0.1];\n", i, p_idx);
+            } else {
+                fprintf(dot_file, "    node%zu:p -> node%d:n [color=red, style=dashed];\n", i, p_idx);
+            }
+        }
+    }
+
+    fprintf(dot_file, "}\n");
+    fclose(dot_file);
+
+    char command[512] = {};
+    snprintf(command, sizeof(command), "dot -Tpng %s -o %s", dot_filename, png_filename);
+    int res = system(command);
+    if (res == 0) {
+        printf("Dump was generated succesfully: %s\n", png_filename);
+    } else {
+        printf("Error\n");
+    }
+}

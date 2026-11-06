@@ -3,9 +3,18 @@
 #include "myformat.cpp"
 
 #include <stdlib.h>
-// проверка верификатора
-//
-// next == -1; prev != -1
+
+
+enum list_err_t
+{
+    LIST_ERR_OK = 0,
+    LIST_ERR_NULLPTR = 1,
+    LIST_ERR_DATABUF_NULLPTR = 2,
+    LIST_ERR_NEXT_NULLPTR = 3,
+    LIST_ERR_PREV_NULLPTR = 4,
+    LIST_ERR_SIZE_GREATER_CAPACITY = 5,
+};
+
 
 //-----------------------------------------------------------------------------------------------------------------------------
 size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
@@ -33,6 +42,8 @@ size_t free_elem_find(list_t* list_ptr);
 void set_current_indexed_elem(list_t* list_ptr, size_t cur_index, list_elem_t value);
 //-----------------------------------------------------------------------------------------------------------------------------
 list_elem_t get_current_indexed_elem(list_t* list_ptr, size_t current_index);
+//-----------------------------------------------------------------------------------------------------------------------------
+list_err_t verifier(list_t* list_ptr);
 //-----------------------------------------------------------------------------------------------------------------------------
 
 
@@ -379,6 +390,97 @@ void set_current_indexed_elem(list_t* list_ptr, size_t cur_index, list_elem_t va
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
+
+list_err_t verifier(list_t* list_ptr) {
+
+    #ifndef LIST_SANITIZE
+    if (list_ptr == NULL) {
+
+        return LIST_ERR_NULLPTR;
+    }
+
+    if (list_ptr->data_buf == NULL) {
+
+        return LIST_ERR_DATABUF_NULLPTR;
+    }
+
+    if (list_ptr->next == NULL) {
+
+        return LIST_ERR_NEXT_NULLPTR;
+    }
+
+    if (list_ptr->prev == NULL) {
+
+        return LIST_ERR_PREV_NULLPTR;
+    }
+
+    if (list_ptr->size > list_ptr->capacity) {
+
+        return LIST_ERR_SIZE_GREATER_CAPACITY;
+    }
+
+    if (list_ptr->head != list_ptr->prev[0]) {
+
+        return LIST_ERR_WRONG_HEAD;
+    }
+
+    if (list_ptr->tail != list_ptr->next[0]) {
+
+        return LIST_ERR_WRONG_TAIL;
+    }
+
+
+    int counter = 0;
+    int pointer = 0;
+
+    while (counter < list_ptr->size) {
+
+        if (list_ptr->next[pointer] == -1 || list_ptr->next[pointer] == 0) {
+
+            return LIST_ERR_NEXT_HOLE; //TODO: сделать запоминание pointera где ошибка
+        }
+
+        pointer = list_ptr->next[pointer];
+
+        counter++;
+    }
+
+    if (pointer != 0) {
+
+        return LIST_ERR_NEXT_HOLE;
+    }
+
+
+    counter = 0;
+    pointer = 0;
+
+    while (counter < list_ptr->size) {
+
+        if (list_ptr->prev[pointer] == -1 || list_ptr->prev[pointer] == 0) {
+
+            return LIST_ERR_PREV_HOLE; //TODO: сделать запоминание pointera где ошибка
+        }
+
+        pointer = list_ptr->prev[pointer];
+
+        counter++;
+    }
+
+    if (pointer != 0) {
+
+        return LIST_ERR_PREV_HOLE;
+    }
+
+
+
+
+    #else
+    void(0);
+    #endif
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
 #define LOG(FORMAT, ...) fprintf(stdout, FORMAT, ##__VA_ARGS__)
 #define LOG_NLINE        fprintf(stdout, "\n")
 #define LOG_FORMAT       fprintf(stdout, "===================================================================================\n")
@@ -435,3 +537,5 @@ void list_dump(list_t* list_ptr) {
 }
 #undef LOG
 #undef LOG_NLINE
+
+//-----------------------------------------------------------------------------------------------------------------------------

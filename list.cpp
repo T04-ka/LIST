@@ -6,16 +6,228 @@
 // проверка верификатора
 //
 // next == -1; prev != -1
-//
 
+//-----------------------------------------------------------------------------------------------------------------------------
+size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
+//-----------------------------------------------------------------------------------------------------------------------------
+size_t list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
+//-----------------------------------------------------------------------------------------------------------------------------
+void list_pop_elem_from_current_index(list_t* list_ptr, size_t current_index);
+//-----------------------------------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------------------------------------------
 void set_current_indexed_elem_in_next(list_t* list_ptr, size_t cur_index, int new_value);
+//-----------------------------------------------------------------------------------------------------------------------------
 void set_current_indexed_elem_in_prev(list_t* list_ptr, size_t cur_index, int new_value);
+//-----------------------------------------------------------------------------------------------------------------------------
 void set_head(list_t* list_ptr, size_t value);
+//-----------------------------------------------------------------------------------------------------------------------------
 void set_tail(list_t* list_ptr, size_t value);
+//-----------------------------------------------------------------------------------------------------------------------------
 int get_current_indexed_elem_from_next(list_t* list_ptr, size_t index);
+//-----------------------------------------------------------------------------------------------------------------------------
 int get_current_indexed_elem_from_prev(list_t* list_ptr, size_t index);
-
+//-----------------------------------------------------------------------------------------------------------------------------
 size_t free_elem_find(list_t* list_ptr);
+//-----------------------------------------------------------------------------------------------------------------------------
+void set_current_indexed_elem(list_t* list_ptr, size_t cur_index, list_elem_t value);
+//-----------------------------------------------------------------------------------------------------------------------------
+list_elem_t get_current_indexed_elem(list_t* list_ptr, size_t current_index);
+//-----------------------------------------------------------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
+
+    // verif
+
+    if (current_index == 0) {
+
+        // error
+        return -1u;
+    }
+
+    size_t free_index = free_elem_find(list_ptr);
+
+    set_current_indexed_elem(list_ptr, free_index, elem);
+
+    // size_t next_index = get_current_indexed_elem_from_next(list_ptr, current_index);
+    size_t prev_index = (size_t) get_current_indexed_elem_from_prev(list_ptr, current_index);
+
+    if (current_index == get_tail(list_ptr)) {
+
+        set_tail(list_ptr, free_index);
+    }
+
+    set_current_indexed_elem_in_next(list_ptr, free_index, (int) current_index);
+    set_current_indexed_elem_in_prev(list_ptr, free_index, (int) prev_index);
+
+    set_current_indexed_elem_in_next(list_ptr, prev_index, (int) free_index);
+    set_current_indexed_elem_in_prev(list_ptr, current_index, (int) free_index);
+
+    list_ptr->size ++;
+
+    return free_index;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
+
+    // verif
+
+    size_t free_index = free_elem_find(list_ptr);
+
+    set_current_indexed_elem(list_ptr, free_index, elem);
+
+    size_t next_index = (size_t) get_current_indexed_elem_from_next(list_ptr, current_index);
+    // size_t prev_index = get_current_indexed_elem_from_prev(list_ptr, current_index);
+
+    if (current_index == get_head(list_ptr)) {
+
+        set_head(list_ptr, free_index);
+    }
+
+    if (next_index == get_tail(list_ptr)) {
+
+        set_tail(list_ptr, free_index);
+    }
+
+    set_current_indexed_elem_in_next(list_ptr, free_index, (int) next_index);
+    set_current_indexed_elem_in_prev(list_ptr, free_index, (int) current_index);
+
+    set_current_indexed_elem_in_next(list_ptr, current_index, (int) free_index);
+    set_current_indexed_elem_in_prev(list_ptr, next_index, (int) free_index);
+
+    list_ptr->size ++;
+
+    return free_index;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+void list_pop_elem_from_current_index(list_t* list_ptr, size_t current_index) {
+
+    // verif
+
+    if (current_index == 0) {
+
+        // error
+        return;
+    }
+
+    size_t prev_index = (size_t) get_current_indexed_elem_from_prev(list_ptr, current_index);
+    size_t next_index = (size_t) get_current_indexed_elem_from_next(list_ptr, current_index);
+
+    if (current_index == get_tail(list_ptr)) {
+
+        set_tail(list_ptr, next_index);
+    }
+
+    if (current_index == get_head(list_ptr)) {
+
+        set_head(list_ptr, prev_index);
+    }
+
+    set_current_indexed_elem_in_prev(list_ptr, next_index, (int) prev_index);
+    set_current_indexed_elem_in_next(list_ptr, prev_index, (int) next_index);
+
+    set_current_indexed_elem(list_ptr, current_index, 0);
+    set_current_indexed_elem_in_next(list_ptr, current_index, -1);
+    set_current_indexed_elem_in_prev(list_ptr, current_index, -1);
+
+    list_ptr->size --;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_insertl(list_t* list_ptr, size_t current_index, list_elem_t value) {
+
+    return list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_ptr, current_index, value);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_insertr(list_t* list_ptr, size_t current_index, list_elem_t value) {
+
+    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, current_index, value);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_insert(list_t* list_ptr, size_t current_index, list_elem_t value) {
+
+    return list_insertr(list_ptr, current_index, value);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+void list_pop(list_t* list_ptr, size_t current_index) {
+
+    list_pop_elem_from_current_index(list_ptr, current_index);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_push_front(list_t* list_ptr, list_elem_t value) {
+
+    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, list_ptr->head, value);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_push_back(list_t* list_ptr, list_elem_t value) {
+
+    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, 0, value);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_push_after(list_t* list_ptr, size_t current_index, list_elem_t value) {
+
+    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, \
+            (size_t) get_current_indexed_elem_from_next(list_ptr, current_index), value);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+size_t list_push_before(list_t* list_ptr, size_t current_index, list_elem_t value) {
+
+    return list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_ptr, \
+           (size_t) get_current_indexed_elem_from_prev(list_ptr, current_index), value);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+void list_pop_front(list_t* list_ptr) {
+
+    list_pop_elem_from_current_index(list_ptr, list_ptr->head);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+void list_pop_back(list_t* list_ptr) {
+
+    list_pop_elem_from_current_index(list_ptr, list_ptr->tail);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+void set_elem(list_t* list_ptr, size_t current_index, list_elem_t value) {
+
+    set_current_indexed_elem(list_ptr, current_index, value);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+list_elem_t get_elem(list_t* list_ptr, size_t index) {
+
+    return get_current_indexed_elem(list_ptr, index);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
 size_t free_elem_find(list_t* list_ptr) {
 
     // verif
@@ -36,68 +248,6 @@ size_t free_elem_find(list_t* list_ptr) {
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_elem_in_current_index_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
-
-    // verif
-
-    if (current_index == 0) {
-
-        // ERROR
-        return -1u;
-    }
-
-    size_t free_index = free_elem_find(list_ptr);
-
-    size_t next_elem = get_current_indexed_elem_from_next(list_ptr, current_index);
-    size_t prev_elem = get_current_indexed_elem_from_prev(list_ptr, current_index);
-
-    if (current_index == get_head(list_ptr)) {
-
-        /
-    }
-
-    if (current_index == get_tail(list_ptr)) {
-
-
-    }
-
-
-}
-
-size_t list_push_elem_after_current_index_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
-
-    // verif
-
-    size_t next_index = free_elem_find(list_ptr);
-    $zu(next_index);
-
-    if (current_index == 0) {
-
-        set_current_indexed_elem_in_next(list_ptr, next_index, (int) get_tail(list_ptr));
-        set_tail(list_ptr, next_index);
-        set_current_indexed_elem_in_next(list_ptr, 0, (int) next_index);
-
-
-    }
-    else {
-        set_current_indexed_elem_in_next(list_ptr, next_index, get_current_indexed_elem_from_next(list_ptr, current_index));
-        set_current_indexed_elem_in_next(list_ptr, current_index, (int) next_index);
-    }
-
-    change_value_of_list_elem_after_pointed_with_current_index(list_ptr, (size_t) current_index, elem);
-
-    if (get_current_indexed_elem_from_next(list_ptr, next_index) == 0) {
-
-        set_head(list_ptr, next_index);
-    }
-
-    list_ptr->size++;
-    return next_index;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------
-
-
 void set_current_indexed_elem_in_next(list_t* list_ptr, size_t cur_index, int new_value) {
 
     // verif
@@ -117,41 +267,6 @@ void set_current_indexed_elem_in_prev(list_t* list_ptr, size_t cur_index, int ne
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_pop_elem_after_pointed_with_current_index(list_t* list_ptr, size_t current_index) {
-    //
-    // cur_next = next[current_index]
-    // теперь next[current_index] = next[cur_next]
-    // ставим -1 в массив next next[cur_next] = -1
-    //
-    // если cur_ind == 0
-    // cur_next = next[tail]
-    // теперь tail = next[current_index]
-    // next[[tail]] = -1
-    //
-    // если next[cur_ind] == 0 - ошибка
-
-    // verif
-
-    size_t next_index = 0;
-    if (current_index == 0) {
-
-        next_index = get_tail(list_ptr);
-        set_tail(list_ptr, (size_t) get_current_indexed_elem_from_next(list_ptr, next_index));
-    }
-    else {
-
-        next_index = (size_t) get_current_indexed_elem_from_next(list_ptr, current_index);
-    }
-
-    set_current_indexed_elem_in_next(list_ptr, current_index, \
-                                    get_current_indexed_elem_from_next(list_ptr, next_index));
-    set_current_indexed_elem(list_ptr, next_index, 0);
-    set_current_indexed_elem_in_next(list_ptr, next_index, -1);
-    list_ptr->size--;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------
-
 void poizon_int_arr(int* array, size_t n);
 void poizon_int_arr(int* array, size_t n) {
 
@@ -161,28 +276,6 @@ void poizon_int_arr(int* array, size_t n) {
 
         array[i] = -1;
     }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------
-
-int change_value_of_list_elem_after_pointed_with_current_index(list_t* list_ptr, size_t cur_index, list_elem_t new_value) {
-
-    // verif
-
-    int next_index = 0;
-    if (cur_index == 0) {
-
-        next_index = (int) get_tail(list_ptr);
-    }
-    else {
-
-        next_index = get_current_indexed_elem_from_next(list_ptr, cur_index);
-    }
-
-    list_ptr->data_buf[next_index] = new_value;
-
-
-    return 0;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -197,7 +290,7 @@ int list_ctor(list_t* list_ptr, size_t nmemb) {
     list_ptr->prev     = (int*) calloc(nmemb, sizeof(int));
     poizon_int_arr(list_ptr->next, nmemb);
     poizon_int_arr(list_ptr->prev, nmemb);
-    change_value_of_list_elem_after_pointed_with_current_index(list_ptr, 0, 69);
+    set_current_indexed_elem(list_ptr, 0, 69);
     set_current_indexed_elem_in_next(list_ptr, 0, 0);
     set_current_indexed_elem_in_prev(list_ptr, 0, 0);
     set_head(list_ptr, 0);

@@ -1,0 +1,51 @@
+digraph G { 
+
+	rankdir = LR;
+	splines = true;
+
+	subgraph cluster_occupied {
+
+		style=invis;
+
+		node0 [shape=record, style=filled, fillcolor="cyan", height=.1, label="{ { <prev> • | prev = 4} | {system | index = 0} | { <next> • | next = 1} }"];
+		node1 [shape=record, height=.1, label="{ { <prev> • | prev = 0} | {val = 100 | index = 1} | { <next> • | next = 2} }"];
+		node2 [shape=record, height=.1, label="{ { <prev> • | prev = 1} | {val = 200 | index = 2} | { <next> • | next = 3} }"];
+		node3 [shape=record, height=.1, label="{ { <prev> • | prev = 2} | {val = 300 | index = 3} | { <next> • | next = 4} }"];
+		node4 [shape=record, height=.1, label="{ { <prev> • | prev = 3} | {val = 400 | index = 4} | { <next> • | next = 0} }"];
+
+		node0 -> node1 [style=invis, weight=100];
+		node1 -> node2 [style=invis, weight=100];
+		node2 -> node3 [style=invis, weight=100];
+		node3 -> node4 [style=invis, weight=100];
+
+		node4:next -> node0:prev [dir=both];
+		node0:next -> node1:prev [dir=both];
+		node1:next -> node2:prev [dir=both];
+		node2:next -> node3:prev [dir=both];
+		node3:next -> node4:prev [dir=both];
+
+		HEAD [shape=record, style = filled, fillcolor="yellow"];
+		TAIL [shape=record, style = filled, fillcolor="yellow"];
+
+		{rank=same; node1; TAIL;}
+		{rank=same; node4; HEAD;}
+	}
+
+	subgraph cluster_free {
+
+		style=invis;
+
+		node5 [shape=record, style=filled, fillcolor="lightgray", height=.1, label="{ { <prev> • | prev = -1} | {FREE | index = 5} | { <next> • | next = -1} }"];
+		node6 [shape=record, style=filled, fillcolor="lightgray", height=.1, label="{ { <prev> • | prev = -1} | {FREE | index = 6} | { <next> • | next = -1} }"];
+		node7 [shape=record, style=filled, fillcolor="lightgray", height=.1, label="{ { <prev> • | prev = -1} | {FREE | index = 7} | { <next> • | next = -1} }"];
+		node8 [shape=record, style=filled, fillcolor="lightgray", height=.1, label="{ { <prev> • | prev = -1} | {FREE | index = 8} | { <next> • | next = -1} }"];
+		node9 [shape=record, style=filled, fillcolor="lightgray", height=.1, label="{ { <prev> • | prev = -1} | {FREE | index = 9} | { <next> • | next = -1} }"];
+
+		node5 -> node6 [style=invis, weight=100];
+		node6 -> node7 [style=invis, weight=100];
+		node7 -> node8 [style=invis, weight=100];
+		node8 -> node9 [style=invis, weight=100];
+	}
+
+	node0 -> node5 [style=invis];
+}

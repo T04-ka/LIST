@@ -1,9 +1,13 @@
 #include "list.h"
+#include <algorithm>
+#include <iterator>
 #define DEBUG
 #include "myformat.cpp"
 
 #include <stdlib.h>
+#include <string.h>
 
+#define MAX_FILENAME_LEN 100
 
 //-----------------------------------------------------------------------------------------------------------------------------
 size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
@@ -18,10 +22,6 @@ void set_current_indexed_elem_in_next(list_t* list_ptr, size_t cur_index, int ne
 //-----------------------------------------------------------------------------------------------------------------------------
 void set_current_indexed_elem_in_prev(list_t* list_ptr, size_t cur_index, int new_value);
 //-----------------------------------------------------------------------------------------------------------------------------
-void set_head(list_t* list_ptr, size_t value);
-//-----------------------------------------------------------------------------------------------------------------------------
-void set_tail(list_t* list_ptr, size_t value);
-//-----------------------------------------------------------------------------------------------------------------------------
 int get_current_indexed_elem_from_next(list_t* list_ptr, size_t index);
 //-----------------------------------------------------------------------------------------------------------------------------
 int get_current_indexed_elem_from_prev(list_t* list_ptr, size_t index);
@@ -34,24 +34,28 @@ list_elem_t get_current_indexed_elem(list_t* list_ptr, size_t current_index);
 //-----------------------------------------------------------------------------------------------------------------------------
 list_err_n list_verifier(list_t* list_ptr);
 //-----------------------------------------------------------------------------------------------------------------------------
+void err_print(list_t* list_ptr, const char* _file, const char* _func, int _nline);
+//-----------------------------------------------------------------------------------------------------------------------------
+int find_next_free(list_t* list_ptr, int ptr);
+//-----------------------------------------------------------------------------------------------------------------------------
 
 #ifdef LIST_SANITIZE
-#define LIST_OK list_verifier(list_ptr);        \
-                if (list_ptr->list_ok.errn) {   \
-                                                \
-                    err_print(list_ptr);        \
-                }
-
-
+#define LIST_OK(ERRT)   list_verifier(list_ptr);        \
+                        $d(list_ptr->list_ok.errn); \
+                        $; \
+                        if (list_ptr->list_ok.errn) {   \
+                                                        \
+                            err_print(list_ptr, __FILE_NAME__, __PRETTY_FUNCTION__, __LINE__);        \
+                            return ERRT;                \
+                        }
 #else
-#define LIST_OK void(0)
+#define LIST_OK(ERRT)  void(0);
 #endif
-
 //-----------------------------------------------------------------------------------------------------------------------------
 
 size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
 
-
+    LIST_OK(-1u);
 
     if (current_index == 0) {
 
@@ -65,11 +69,6 @@ size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* li
 
     // size_t next_index = get_current_indexed_elem_from_next(list_ptr, current_index);
     size_t prev_index = (size_t) get_current_indexed_elem_from_prev(list_ptr, current_index);
-
-    if (current_index == get_tail(list_ptr)) {
-
-        set_tail(list_ptr, free_index);
-    }
 
     set_current_indexed_elem_in_next(list_ptr, free_index, (int) current_index);
     set_current_indexed_elem_in_prev(list_ptr, free_index, (int) prev_index);
@@ -86,7 +85,11 @@ size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* li
 
 size_t list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
 
-    // verif
+    LIST_OK(-1u);
+//     if (list_ptr->list_ok.errn) {
+//
+//         return -1u;
+//     }
 
     size_t free_index = free_elem_find(list_ptr);
 
@@ -94,16 +97,6 @@ size_t list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* l
 
     size_t next_index = (size_t) get_current_indexed_elem_from_next(list_ptr, current_index);
     // size_t prev_index = get_current_indexed_elem_from_prev(list_ptr, current_index);
-
-    if (current_index == get_head(list_ptr)) {
-
-        set_head(list_ptr, free_index);
-    }
-
-    if (next_index == get_tail(list_ptr)) {
-
-        set_tail(list_ptr, free_index);
-    }
 
     set_current_indexed_elem_in_next(list_ptr, free_index, (int) next_index);
     set_current_indexed_elem_in_prev(list_ptr, free_index, (int) current_index);
@@ -120,7 +113,8 @@ size_t list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* l
 
 void list_pop_elem_from_current_index(list_t* list_ptr, size_t current_index) {
 
-    // verif
+    LIST_OK();
+
 
     if (current_index == 0) {
 
@@ -130,16 +124,6 @@ void list_pop_elem_from_current_index(list_t* list_ptr, size_t current_index) {
 
     size_t prev_index = (size_t) get_current_indexed_elem_from_prev(list_ptr, current_index);
     size_t next_index = (size_t) get_current_indexed_elem_from_next(list_ptr, current_index);
-
-    if (current_index == get_tail(list_ptr)) {
-
-        set_tail(list_ptr, next_index);
-    }
-
-    if (current_index == get_head(list_ptr)) {
-
-        set_head(list_ptr, prev_index);
-    }
 
     set_current_indexed_elem_in_prev(list_ptr, next_index, (int) prev_index);
     set_current_indexed_elem_in_next(list_ptr, prev_index, (int) next_index);
@@ -183,7 +167,7 @@ void list_pop(list_t* list_ptr, size_t current_index) {
 
 size_t list_push_front(list_t* list_ptr, list_elem_t value) {
 
-    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, list_ptr->head, value);
+    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, get_head(list_ptr), value);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -213,14 +197,14 @@ size_t list_push_before(list_t* list_ptr, size_t current_index, list_elem_t valu
 
 void list_pop_front(list_t* list_ptr) {
 
-    list_pop_elem_from_current_index(list_ptr, list_ptr->head);
+    list_pop_elem_from_current_index(list_ptr, get_head(list_ptr));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 void list_pop_back(list_t* list_ptr) {
 
-    list_pop_elem_from_current_index(list_ptr, list_ptr->tail);
+    list_pop_elem_from_current_index(list_ptr, get_tail(list_ptr));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -241,7 +225,7 @@ list_elem_t get_elem(list_t* list_ptr, size_t index) {
 
 size_t free_elem_find(list_t* list_ptr) {
 
-    // verif
+    LIST_OK(-1u);
 
     size_t i = 0;
     for (i = 0; i < list_ptr->capacity; i++) {
@@ -261,7 +245,7 @@ size_t free_elem_find(list_t* list_ptr) {
 
 void set_current_indexed_elem_in_next(list_t* list_ptr, size_t cur_index, int new_value) {
 
-    // verif
+    // LIST_OK();
 
     list_ptr->next[cur_index] = new_value;
 }
@@ -271,7 +255,7 @@ void set_current_indexed_elem_in_next(list_t* list_ptr, size_t cur_index, int ne
 
 void set_current_indexed_elem_in_prev(list_t* list_ptr, size_t cur_index, int new_value) {
 
-    // verif
+   // LIST_OK();
 
     list_ptr->prev[cur_index] = new_value;
 }
@@ -281,8 +265,6 @@ void set_current_indexed_elem_in_prev(list_t* list_ptr, size_t cur_index, int ne
 void poizon_int_arr(int* array, size_t n);
 void poizon_int_arr(int* array, size_t n) {
 
-    //verif
-
     for (size_t i = 0; i < n; i++) {
 
         array[i] = -1;
@@ -291,9 +273,7 @@ void poizon_int_arr(int* array, size_t n) {
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-int list_ctor(list_t* list_ptr, size_t nmemb) {
-
-    // verif
+void list_ctor(list_t* list_ptr, size_t nmemb) {
 
     list_ptr->capacity = nmemb;
     list_ptr->data_buf = (list_elem_t*) calloc(nmemb, sizeof(list_elem_t));
@@ -304,64 +284,45 @@ int list_ctor(list_t* list_ptr, size_t nmemb) {
     set_current_indexed_elem(list_ptr, 0, 69);
     set_current_indexed_elem_in_next(list_ptr, 0, 0);
     set_current_indexed_elem_in_prev(list_ptr, 0, 0);
-    set_head(list_ptr, 0);
-    set_tail(list_ptr, 0);
     list_ptr->size = 0;
 
-    return 0;
+    LIST_OK();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-int list_dtor(list_t* list_ptr) {
-
-    // verif
+void list_dtor(list_t* list_ptr) {
 
     free(list_ptr->data_buf);
     free(list_ptr->next);
     free(list_ptr->prev);
-    set_head(list_ptr, 0);
-    set_tail(list_ptr, 0);
     list_ptr->size = 0;
-
-    return 0;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------
-
-void set_head(list_t* list_ptr, size_t val) {
-
-    // verif
-
-    list_ptr->head = val;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------
-
-void set_tail(list_t* list_ptr, size_t val) {
-
-    // verif
-
-    list_ptr->tail = val;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 size_t get_tail(list_t* list_ptr) {
 
-   return list_ptr->tail;
+    LIST_OK(-1u);
+
+    return (size_t) list_ptr->next[0];
+    // return list_ptr->tail;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 size_t get_head(list_t* list_ptr) {
 
-   return list_ptr->head;
+    LIST_OK(-1u);
+    // return list_ptr->Data
+    return (size_t) list_ptr->prev[0];
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 int get_current_indexed_elem_from_next(list_t* list_ptr, size_t index) {
+
+    LIST_OK(-2);
 
     return list_ptr->next[index];
 }
@@ -370,12 +331,16 @@ int get_current_indexed_elem_from_next(list_t* list_ptr, size_t index) {
 
 int get_current_indexed_elem_from_prev(list_t* list_ptr, size_t index) {
 
+    LIST_OK(-2);
+
     return list_ptr->prev[index];
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 list_elem_t get_current_indexed_elem(list_t* list_ptr, size_t index) {
+
+    LIST_OK(NAN);
 
     return list_ptr->data_buf[index];
 }
@@ -384,7 +349,7 @@ list_elem_t get_current_indexed_elem(list_t* list_ptr, size_t index) {
 
 void set_current_indexed_elem(list_t* list_ptr, size_t cur_index, list_elem_t value) {
 
-    // verif
+    // LIST_OK();
 
     list_ptr->data_buf[cur_index] = value;
 }
@@ -395,40 +360,46 @@ list_err_n list_verifier(list_t* list_ptr) {
 
     #ifdef LIST_SANITIZE
     if (list_ptr == NULL) {
-
+        $;
         list_ptr->list_ok.errn = LIST_ERR_NULLPTR;
         return LIST_ERR_NULLPTR;
     }
 
     if (list_ptr->data_buf == NULL) {
 
+        list_ptr->list_ok.errn = LIST_ERR_DATABUF_NULLPTR;
         return LIST_ERR_DATABUF_NULLPTR;
     }
 
     if (list_ptr->next == NULL) {
 
+        list_ptr->list_ok.errn = LIST_ERR_NEXT_NULLPTR;
         return LIST_ERR_NEXT_NULLPTR;
     }
 
     if (list_ptr->prev == NULL) {
 
+        list_ptr->list_ok.errn = LIST_ERR_PREV_NULLPTR;
         return LIST_ERR_PREV_NULLPTR;
     }
 
     if (list_ptr->size > list_ptr->capacity) {
 
+        list_ptr->list_ok.errn = LIST_ERR_SIZE_GREATER_CAPACITY;
         return LIST_ERR_SIZE_GREATER_CAPACITY;
     }
 
-    if (list_ptr->head != list_ptr->prev[0]) {
-
-        return LIST_ERR_WRONG_HEAD;
-    }
-
-    if (list_ptr->tail != list_ptr->next[0]) {
-
-        return LIST_ERR_WRONG_TAIL;
-    }
+//     if (list_ptr->head != list_ptr->prev[0]) {
+//
+//         list_ptr->list_ok.errn = LIST_ERR_WRONG_HEAD;
+//         return LIST_ERR_WRONG_HEAD;
+//     }
+//
+//     if (list_ptr->tail != list_ptr->next[0]) {
+//
+//         list_ptr->list_ok.errn = LIST_ERR_WRONG_TAIL;
+//         return LIST_ERR_WRONG_TAIL;
+//     }
 
 
     int counter = 0;
@@ -438,6 +409,8 @@ list_err_n list_verifier(list_t* list_ptr) {
 
         if (list_ptr->next[pointer] == -1 || list_ptr->next[pointer] == 0) {
 
+            list_ptr->list_ok.next_hole_pointer = pointer;
+            list_ptr->list_ok.errn = LIST_ERR_NEXT_HOLE;
             return LIST_ERR_NEXT_HOLE; //TODO: сделать запоминание pointera где ошибка
         }
 
@@ -448,6 +421,9 @@ list_err_n list_verifier(list_t* list_ptr) {
 
     if (pointer != 0) {
 
+
+        list_ptr->list_ok.next_hole_pointer = pointer;
+        list_ptr->list_ok.errn = LIST_ERR_NULLPTR;
         return LIST_ERR_NEXT_HOLE;
     }
 
@@ -459,6 +435,8 @@ list_err_n list_verifier(list_t* list_ptr) {
 
         if (list_ptr->prev[pointer] == -1 || list_ptr->prev[pointer] == 0) {
 
+            list_ptr->list_ok.prev_hole_pointer = pointer;
+            list_ptr->list_ok.errn = LIST_ERR_NULLPTR;
             return LIST_ERR_PREV_HOLE; //TODO: сделать запоминание pointera где ошибка
         }
 
@@ -469,11 +447,25 @@ list_err_n list_verifier(list_t* list_ptr) {
 
     if (pointer != 0) {
 
+        list_ptr->list_ok.prev_hole_pointer = pointer;
+        list_ptr->list_ok.errn = LIST_ERR_NULLPTR;
         return LIST_ERR_PREV_HOLE;
     }
 
-    return LIST_ERR_OK;
+    list_ptr->list_ok.errn = LIST_ERR_OK;
+    #else
+    void(0);
+    #endif
 
+    return LIST_ERR_OK;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+void err_print(list_t* list_ptr, const char* _file, const char* _func, int _nline) {
+
+    #ifdef LIST_SANITIZE
+    fprintf(stderr, "On %s:%d in function %s Error: %d\n", _file, _nline, _func, list_ptr->list_ok.errn);
     #else
     void(0);
     #endif
@@ -481,21 +473,27 @@ list_err_n list_verifier(list_t* list_ptr) {
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-#define LOG(FORMAT, ...) fprintf(stdout, FORMAT, ##__VA_ARGS__)
-#define LOG_NLINE        fprintf(stdout, "\n")
-#define LOG_FORMAT       fprintf(stdout, "===================================================================================\n")
+#define LOG(FORMAT, ...) fprintf(stream, FORMAT, ##__VA_ARGS__)
+#define LOG_NLINE        fprintf(stream, "\n")
+#define LOG_FORMAT       fprintf(stream, "===================================================================================\n")
 
-void list_dump(list_t* list_ptr) {
+void list_dump(list_t* list_ptr, FILE* stream) {
 
-    // verif
+    $;
 
+    if (list_ptr == NULL) {
+
+        $err("ZZZ");
+    }
+    LIST_OK();
+    $;
     LOG_FORMAT;
     LOG_NLINE;
     LOG(FAT "%29sLIST DUMP\n" DEF, "");
     LOG_NLINE;
 
     LOG("%5stail = %zu %5shead = %zu %5ssize = %zu %5scapacity = %zu\n", \
-        "", list_ptr->tail, "", list_ptr->head, "", list_ptr->size, "", list_ptr->capacity);
+        "", get_tail(list_ptr), "", get_head(list_ptr), "", list_ptr->size, "", list_ptr->capacity);
 
     LOG_NLINE;
 
@@ -540,105 +538,177 @@ void list_dump(list_t* list_ptr) {
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void make_list_dump(list_t* list_ptr, const char* dot_filename, const char* png_filename) {
+int html_dump(list_t* list_ptr, FILE* html_file) {
 
-    FILE* dot_file = fopen(dot_filename, "w");
-    if (!dot_file) {
-        return;
+    if (html_file == NULL) {
+
+        fprintf(stderr, RED FAT "HTML FILE NULLPTR\n" DEF);
+        return 1;
     }
 
-    fprintf(dot_file, "digraph G {\n");
-    fprintf(dot_file, "    newrank=true;\n");
-    // compound=true легализует пересечение стрелками границ блоков без ошибок триангуляции
-    fprintf(dot_file, "    compound=true;\n");
-    fprintf(dot_file, "    rankdir=TB;\n");
-    fprintf(dot_file, "    splines=true;\n");
-    fprintf(dot_file, "    nodesep=0.5;\n");
-    fprintf(dot_file, "    ranksep=0.4;\n\n");
-    fprintf(dot_file, "    node [shape=record, height=.1];\n\n");
+    fprintf(html_file, "<!DOCTYPE html>\n");
+    fprintf(html_file, "<html>\n");
+    fprintf(html_file, "<head>\n");
+    fprintf(html_file, "    <meta charset=\"US-ASCII\">\n");
+    fprintf(html_file, "    <title>LIST DUMP</title>\n");
+    fprintf(html_file, "</head>\n");
+    fprintf(html_file, "<body>\n");
+    fprintf(html_file, "    <p style=\"font-family: monospace;\">\n        ");
 
-    size_t items_per_col = 4;
-    size_t num_cols = (list_ptr->capacity + items_per_col - 1) / items_per_col;
-    if (num_cols == 0) num_cols = 1;
+    png_dump(list_ptr, "dump4html.png");
 
-    fprintf(dot_file, "    { \n");
-    fprintf(dot_file, "        rank=same; \n");
-    fprintf(dot_file, "        node [shape=point, style=invis, width=0];\n        ");
+    fprintf(html_file, " DED_LOH\n");
+    fprintf(html_file, "    < -- Image insert -->\n");
+    fprintf(html_file, "    <img src=\"dump4html.png\" alt=\"graph.png\" style=\"max-width: 100%%; height: auto;\"><br>\n");
 
-    for (size_t c = 0; c < num_cols; c++) {
-        fprintf(dot_file, "anchor%zu", c);
-        if (c < num_cols - 1) fprintf(dot_file, " -> ");
+    fprintf(html_file, "\n    </p>\n");
+    fprintf(html_file, "</body>\n");
+    fprintf(html_file, "</html>\n");
+
+    printf("HTML dump was writed succesfully.\n");
+
+    return 0;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+int png_dump(list_t* list_ptr, const char* png_name) {
+
+    FILE* png_f = fopen(png_name, "w");
+
+    dot_file_generate(list_ptr, "yashapidor.dot");
+
+    char system_command[MAX_FILENAME_LEN * 2] = "dot -Tpng yashapidor.dot -o ";
+    strncat(system_command, png_name, MAX_FILENAME_LEN);
+    strcat(system_command, " ; rm yashapidor.dot");
+
+    int errn = system(system_command);
+    fclose(png_f);
+
+    if (errn == -1) {
+
+        fprintf(stderr, FAT "ERROR: running dot script fault.\n" DEF);
+        return 1;
     }
 
-    fprintf(dot_file, " [style=invis]; \n");
-    fprintf(dot_file, "    }\n\n");
+    printf("PNG dump was created successfully.\n");
 
-    for (size_t c = 0; c < num_cols; c++) {
+    return 0;
+}
 
-        fprintf(dot_file, "    subgraph cluster_col%zu {\n", c);
-        fprintf(dot_file, "        label = \"Блок %zu\"; color=lightgray; style=dashed;\n", c + 1);
+//-----------------------------------------------------------------------------------------------------------------------------
 
-        size_t start_index = c * items_per_col;
+#define WRITE_DOT(FORMAT, ...) fprintf(dot_file, FORMAT, ##__VA_ARGS__)
 
-        fprintf(dot_file, "        { rank=same; anchor%zu; node%zu; }\n\n", c, start_index);
+int dot_file_generate(list_t* list_ptr, const char* dot_file_name) {
 
+    FILE* dot_file = fopen(dot_file_name, "w");
 
-        for (size_t i = start_index; i < (c + 1) * items_per_col && i < list_ptr->capacity; i++) {
+    WRITE_DOT("digraph G { \n\n\trankdir = LR;\n\tsplines = true;\n\n\tsubgraph cluster_occupied {\n\n\t\tstyle=invis;\n\n");
 
-            const char* prefix = "";
-            if (i == list_ptr->head) prefix = "HEAD\\n";
-            if (i == list_ptr->tail) prefix = "TAIL\\n";
+    WRITE_DOT("\t\tnode0 [shape=record, style=filled, fillcolor=\"cyan\", height=.1, label=\""  \
+        "{ { <prev> • | prev = %zu} | {system | index = 0} | { <next> • | next = %zu} }\"];\n",
+                       get_head(list_ptr),                               get_tail(list_ptr));
 
-            // Генерируем label (текст ячейки) — строго без атрибутов стиля внутри!
-            fprintf(dot_file, "        node%zu [label=\"{ %sIndex: %zu | { <p> prev: %d | data: %lg | <n> next: %d } }\"",
-                    i, prefix, i, list_ptr->prev[i], list_ptr->data_buf[i], list_ptr->next[i]);
+    for (unsigned i = 1; i < list_ptr->capacity; i++) {
 
-            // Атрибуты стиля пишем СНАРУЖИ кавычек label
-            if (i == 0) {
-                fprintf(dot_file, ", style=filled, fillcolor=lightblue, gradientangle=90");
-            }
+        if (list_ptr->next[i] == -1) {
 
-            // Закрываем описание узла квадратной скобкой
-            fprintf(dot_file, "];\n");
+            continue;
         }
 
-        fprintf(dot_file, "    }\n\n");
+        WRITE_DOT("\t\tnode%u [shape=record, height=.1, label=\""                                                                  \
+            "{ { <prev> • | prev = %i} | {val = %lg | index = %u} | { <next> • | next = %i} }\"];\n",                              \
+                      i,  get_current_indexed_elem_from_prev(list_ptr, i),                                                         \
+                                        get_current_indexed_elem(list_ptr, i),                                                     \
+                                                    i,                         get_current_indexed_elem_from_next(list_ptr, i));   \
     }
 
-    // Блок генерации связей (стрелок)
-    for (size_t i = 0; i < list_ptr->capacity; i++) {
+    WRITE_DOT("\n");
 
-        int n_idx = list_ptr->next[i];
-        if (n_idx >= 0 && (size_t)n_idx < list_ptr->capacity) {
+    int pointer = 0;
+    for (unsigned i = 0; i < list_ptr->size; i++) {
 
-            // Внесли weight=0.1 для длинных стрелок, чтобы снизить натяжение между столбцами
-            if (abs((int)i - n_idx) > (int)items_per_col) {
-                fprintf(dot_file, "    node%zu:n -> node%d:p [color=blue, weight=0.1];\n", i, n_idx);
-            } else {
-                fprintf(dot_file, "    node%zu:n -> node%d:p [color=blue];\n", i, n_idx);
-            }
-        }
+        int next_pointer = list_ptr->next[pointer];
+        WRITE_DOT("\t\tnode%d -> node%d [style=invis, weight=100];\n", pointer, list_ptr->next[pointer]);
 
-        int p_idx = list_ptr->prev[i];
-        if (p_idx >= 0 && (size_t)p_idx < list_ptr->capacity) {
-
-            if (abs((int)i - p_idx) > (int)items_per_col) {
-                fprintf(dot_file, "    node%zu:p -> node%d:n [color=red, style=dashed, weight=0.1];\n", i, p_idx);
-            } else {
-                fprintf(dot_file, "    node%zu:p -> node%d:n [color=red, style=dashed];\n", i, p_idx);
-            }
-        }
+        pointer = next_pointer;
     }
 
-    fprintf(dot_file, "}\n");
+    WRITE_DOT("\n");
+
+    for (unsigned i = 0; i <= list_ptr->size; i++) {
+
+        int next_pointer = list_ptr->next[pointer];
+        WRITE_DOT("\t\tnode%d:next -> node%d:prev [dir=both];\n", pointer, list_ptr->next[pointer]);
+
+        pointer = next_pointer;
+    }
+
+    WRITE_DOT("\n\t\tHEAD [shape=record, style = filled, fillcolor=\"yellow\"];\n\t\tTAIL [shape=record, style = filled, fillcolor=\"yellow\"];\n\n");
+    WRITE_DOT("\t\t{rank=same; node%zu; TAIL;}\n\t\t{rank=same; node%zu; HEAD;}\n\t}\n\n", \
+                               get_tail(list_ptr),              get_head(list_ptr));
+
+    WRITE_DOT("\tsubgraph cluster_free {\n\n\t\tstyle=invis;\n\n");
+
+    for (unsigned i = 1; i < list_ptr->capacity; i++) {
+
+        if (list_ptr->next[i] != -1) {
+
+            continue;
+        }
+
+        WRITE_DOT("\t\tnode%u [shape=record, style=filled, fillcolor=\"lightgray\", height=.1, label=\""                         \
+          "{ { <prev> • | prev = %d} | {FREE | index = %u} | { <next> • | next = %d} }\"];\n",                                   \
+                            i,   get_current_indexed_elem_from_prev(list_ptr, i),                                                \
+                                               i,                         get_current_indexed_elem_from_next(list_ptr, i));
+    }
+
+    WRITE_DOT("\n");
+
+    for (pointer = 0; (unsigned) pointer < list_ptr->capacity; pointer++) {
+
+        if (list_ptr->next[pointer] != -1) {
+
+            continue;
+        }
+
+        int next_pointer = find_next_free(list_ptr, pointer + 1);
+
+        if (next_pointer == -1) {
+
+            break;
+        }
+
+        WRITE_DOT("\t\tnode%d -> node%d [style=invis, weight=100];\n", \
+                       pointer,  next_pointer);
+    }
+
+    pointer = find_next_free(list_ptr, 0);
+    WRITE_DOT("\t}\n\n\tnode0 -> node%d [style=invis];\n}", pointer);
+
     fclose(dot_file);
 
-    char command[512] = {};
-    snprintf(command, sizeof(command), "dot -Tpng %s -o %s", dot_filename, png_filename);
-    int res = system(command);
-    if (res == 0) {
-        printf("Dump was generated succesfully: %s\n", png_filename);
-    } else {
-        printf("Error\n");
+    printf("DOT file was created successfully.\n");
+    return 0;
+}
+
+#undef WRITE_DOT
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+
+int find_next_free(list_t* list_ptr, int ptr) {
+
+    while ((size_t) ptr < list_ptr->capacity) {
+
+        if (list_ptr->next[ptr] == -1) {
+
+            return ptr;
+        }
+
+        ptr++;
     }
+
+    return -1;
 }

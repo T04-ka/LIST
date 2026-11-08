@@ -1,7 +1,7 @@
 #ifndef LIST_H
 #define LIST_H
 
-#define LIST_SANITIZE
+// #define LIST_SANITIZE
 
 #ifdef LIST_SANITIZE
 #define ONDEBUG(...) __VA_ARGS__
@@ -34,7 +34,8 @@ enum list_err_n
 struct list_err_t
 {
     list_err_n errn;
-    int hole_pointer;
+    int next_hole_pointer;
+    int prev_hole_pointer;
 };
 
 struct list_t
@@ -45,8 +46,6 @@ struct list_t
 
     size_t capacity;
     size_t size;
-    size_t head;
-    size_t tail;
 
     ONDEBUG(list_err_t list_ok;)
 };
@@ -54,11 +53,11 @@ struct list_t
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-int list_ctor(list_t* list_ptr, size_t nmemb);
+void list_ctor(list_t* list_ptr, size_t nmemb);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-int list_dtor(list_t* list_ptr);
+void list_dtor(list_t* list_ptr);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
@@ -78,7 +77,7 @@ list_elem_t get_elem(list_t* list_ptr, size_t index);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_dump(list_t* list_ptr);
+void list_dump(list_t* list_ptr, FILE* stream = stdout);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
@@ -122,7 +121,15 @@ size_t list_push_before(list_t* list_ptr, size_t current_index, list_elem_t valu
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void make_list_dump(list_t* list_ptr, const char* dot_filename, const char* png_filename);
+int html_dump(list_t* list_ptr, FILE* html_file);
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+int png_dump(list_t* list_ptr, const char* png_name);
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+int dot_file_generate(list_t* list_ptr, const char* dot_file_name);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 

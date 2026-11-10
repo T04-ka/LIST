@@ -1,7 +1,7 @@
 
 digraph G {
 
-    rankdir = LR;
+    rankdir = TB;
     splines = true;
 
     subgraph cluster_occupied {

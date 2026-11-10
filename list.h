@@ -93,35 +93,35 @@ size_t list_insert(list_t* list_ptr, size_t current_index, list_elem_t value);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_pop(list_t* list_ptr, size_t current_index);
+void list_del(list_t* list_ptr, size_t current_index);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_front(list_t* list_ptr, list_elem_t value);
+size_t list_add_front(list_t* list_ptr, list_elem_t value);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_back(list_t* list_ptr, list_elem_t value);
+size_t list_add_back(list_t* list_ptr, list_elem_t value);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_pop_front(list_t* list_ptr);
+void list_del_front(list_t* list_ptr);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_pop_back(list_t* list_ptr);
+void list_del_back(list_t* list_ptr);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_after(list_t* list_ptr, size_t current_index, list_elem_t value);
+size_t list_add_after(list_t* list_ptr, size_t current_index, list_elem_t value);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_before(list_t* list_ptr, size_t current_index, list_elem_t value);
+size_t list_add_before(list_t* list_ptr, size_t current_index, list_elem_t value);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-int html_dump(list_t* list_ptr, FILE* html_file);
+int html_dump(list_t* list_ptr, FILE* html_file, const char* png_name);
 
 //-----------------------------------------------------------------------------------------------------------------------------
 

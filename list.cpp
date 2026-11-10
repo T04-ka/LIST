@@ -10,11 +10,11 @@
 #define MAX_FILENAME_LEN 100
 
 //-----------------------------------------------------------------------------------------------------------------------------
-size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
+size_t list_add_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
 //-----------------------------------------------------------------------------------------------------------------------------
-size_t list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
+size_t list_add_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem);
 //-----------------------------------------------------------------------------------------------------------------------------
-void list_pop_elem_from_current_index(list_t* list_ptr, size_t current_index);
+void list_del_elem_from_current_index(list_t* list_ptr, size_t current_index);
 //-----------------------------------------------------------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ int find_next_free(list_t* list_ptr, int ptr);
 #endif
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
+size_t list_add_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
 
     LIST_OK(-1u);
 
@@ -83,7 +83,7 @@ size_t list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_t* li
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
+size_t list_add_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* list_ptr, size_t current_index, list_elem_t elem) {
 
     LIST_OK(-1u);
 //     if (list_ptr->list_ok.errn) {
@@ -111,7 +111,7 @@ size_t list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_t* l
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_pop_elem_from_current_index(list_t* list_ptr, size_t current_index) {
+void list_del_elem_from_current_index(list_t* list_ptr, size_t current_index) {
 
     LIST_OK();
 
@@ -139,14 +139,14 @@ void list_pop_elem_from_current_index(list_t* list_ptr, size_t current_index) {
 
 size_t list_insertl(list_t* list_ptr, size_t current_index, list_elem_t value) {
 
-    return list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_ptr, current_index, value);
+    return list_add_elem_in_current_index_from_LEFT_and_return_array_pos(list_ptr, current_index, value);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 size_t list_insertr(list_t* list_ptr, size_t current_index, list_elem_t value) {
 
-    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, current_index, value);
+    return list_add_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, current_index, value);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -158,53 +158,53 @@ size_t list_insert(list_t* list_ptr, size_t current_index, list_elem_t value) {
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_pop(list_t* list_ptr, size_t current_index) {
+void list_del(list_t* list_ptr, size_t current_index) {
 
-    list_pop_elem_from_current_index(list_ptr, current_index);
+    list_del_elem_from_current_index(list_ptr, current_index);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_front(list_t* list_ptr, list_elem_t value) {
+size_t list_add_front(list_t* list_ptr, list_elem_t value) {
 
-    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, get_head(list_ptr), value);
+    return list_add_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, get_head(list_ptr), value);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_back(list_t* list_ptr, list_elem_t value) {
+size_t list_add_back(list_t* list_ptr, list_elem_t value) {
 
-    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, 0, value);
+    return list_add_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, 0, value);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_after(list_t* list_ptr, size_t current_index, list_elem_t value) {
+size_t list_add_after(list_t* list_ptr, size_t current_index, list_elem_t value) {
 
-    return list_push_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, \
+    return list_add_elem_in_current_index_from_RIGHT_and_return_array_pos(list_ptr, \
             (size_t) get_current_indexed_elem_from_next(list_ptr, current_index), value);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-size_t list_push_before(list_t* list_ptr, size_t current_index, list_elem_t value) {
+size_t list_add_before(list_t* list_ptr, size_t current_index, list_elem_t value) {
 
-    return list_push_elem_in_current_index_from_LEFT_and_return_array_pos(list_ptr, \
+    return list_add_elem_in_current_index_from_LEFT_and_return_array_pos(list_ptr, \
            (size_t) get_current_indexed_elem_from_prev(list_ptr, current_index), value);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_pop_front(list_t* list_ptr) {
+void list_del_front(list_t* list_ptr) {
 
-    list_pop_elem_from_current_index(list_ptr, get_head(list_ptr));
+    list_del_elem_from_current_index(list_ptr, get_head(list_ptr));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-void list_pop_back(list_t* list_ptr) {
+void list_del_back(list_t* list_ptr) {
 
-    list_pop_elem_from_current_index(list_ptr, get_tail(list_ptr));
+    list_del_elem_from_current_index(list_ptr, get_tail(list_ptr));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -538,7 +538,9 @@ void list_dump(list_t* list_ptr, FILE* stream) {
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
-int html_dump(list_t* list_ptr, FILE* html_file) {
+#define WRITE_HTML(FORMAT, ...) fprintf(html_file, FORMAT, ##__VA_ARGS__)
+
+int html_dump(list_t* list_ptr, FILE* html_file, const char* png_name) {
 
     if (html_file == NULL) {
 
@@ -546,26 +548,26 @@ int html_dump(list_t* list_ptr, FILE* html_file) {
         return 1;
     }
 
-    fprintf(html_file, "<!DOCTYPE html>\n");
-    fprintf(html_file, "<html>\n");
-    fprintf(html_file, "<head>\n");
-    fprintf(html_file, "    <meta charset=\"US-ASCII\">\n");
-    fprintf(html_file, "    <title>LIST DUMP</title>\n");
-    fprintf(html_file, "</head>\n");
-    fprintf(html_file, "<body>\n");
-    fprintf(html_file, "    <p style=\"font-family: monospace;\">\n        ");
+    WRITE_HTML("<!DOCTYPE html>\n");
+    WRITE_HTML("<html>\n");
+    WRITE_HTML("<head>\n");
+    WRITE_HTML("    <meta charset=\"US-ASCII\">\n");
+    WRITE_HTML("    <title>LIST DUMP</title>\n");
+    WRITE_HTML("</head>\n");
+    WRITE_HTML("<body>\n");
+    WRITE_HTML("<h1 style=\"text-align: center;\"> LIST DUMP named %s</h1>\n", png_name);
+    WRITE_HTML("    <p style=\"font-family: monospace;\">\n");
 
-    png_dump(list_ptr, "dump4html.png");
+    png_dump(list_ptr, png_name);
 
-    fprintf(html_file, " DED_LOH\n");
-    fprintf(html_file, "    < -- Image insert -->\n");
-    fprintf(html_file, "    <img src=\"dump4html.png\" alt=\"graph.png\" style=\"max-width: 100%%; height: auto;\"><br>\n");
+    WRITE_HTML("    \n");
+    WRITE_HTML("    <img src=\"dump4html.png\" alt=\"graph.png\" style=\"max-width: 100%%; height: auto;\"><br>\n");
 
-    fprintf(html_file, "\n    </p>\n");
-    fprintf(html_file, "</body>\n");
-    fprintf(html_file, "</html>\n");
+    WRITE_HTML("\n    </p>\n");
+    WRITE_HTML("</body>\n");
+    WRITE_HTML("</html>\n");
 
-    printf("HTML dump was writed succesfully.\n");
+    printf("HTML dump has written succesfully.\n");
 
     return 0;
 }
